@@ -1,7 +1,12 @@
 2
-1 add R1  R2  R3 
-2 addi R4  R1  R3 
-3 add R1  R2  R3 
+1 add   $s3  $s1  $s2    2 3
+2 sub   $s4  $s3  $s5    3 0
+3 add   $t0  $s3  $s4    6 7
+4 mult  lo   $s5  $s6    5 0
+5 mov   $t1  lo   $zero  0 0
+6 lw    $t2  100  $t0    7 0
+7 add   $t3  $t2  $t0    0 0
+ 
 
 
 
