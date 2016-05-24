@@ -1,0 +1,8 @@
+2
+1 add R1  R2  R3 
+2 addi R4  R1  R3 
+3 add R1  R2  R3 
+
+
+
+
