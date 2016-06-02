@@ -7,7 +7,6 @@
 
 using namespace std;
 
-#define MAX 10
 #define MaxPipelines 8
 using namespace std;
 
@@ -26,6 +25,7 @@ typedef struct tpInstrucao{
 	char op2[5];
 	int depende[2];
 	bool naoExecutando = true;
+	//bool Independência = true;
 	int estagio = 0;
 } Instrucao;
 
@@ -41,20 +41,21 @@ typedef struct tpEstagios{
 int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int inst, int pipe);
 bool existeInstrucoesASeremExecutadas(vector<Instrucao> &instrucoes);
 void liberarInstrucoesExecutadas(vector<Instrucao> &instrucoes);
+bool verificaSeExisteDependencia(vector<Instrucao> instrucoes, Instrucao* atual);
+
+
 
 int main(){
 
+	//Declaração de variavéis
+
 	vector<Instrucao> instrucao;
-
-
 
 	//Inicio: Leitura do arquivo txt
 	ifstream arquivoInstrucoes ("instrucoes.txt");
 
 	int qtdePipelines;
 	int numeroinstrucoes;
-
-	int i=0, j=0;
 	int aux;
 
 	if(arquivoInstrucoes.is_open()){
@@ -95,6 +96,7 @@ int main(){
 	
 	else{
 		cout << "Não foi possivel ler o arquivo" << endl;
+		return 0;
 	}
 	//Fim: Leitura do arquivo txt
 
@@ -103,9 +105,7 @@ int main(){
 	int numeroDoCiclo = 1;
 
 	while( existeInstrucoesASeremExecutadas(instrucao) ){
-		Instrucao aux = instrucao[0];
-
-	//	cout << "1 aux0.estagio: " << aux.estagio << " aux0.naoExecutando" << aux.naoExecutando << endl;
+		//Instrucao aux = instrucao[0];
 
 		int estagio[qtdePipelines][5];
 
@@ -118,7 +118,9 @@ int main(){
 
 
 		liberarInstrucoesExecutadas(instrucao);
+		//Fim: Verificação de Dependências
 		
+		//Impressão	
 		cout << "---------------------------------------------" << endl;
 		cout << "Ciclo " << numeroDoCiclo << endl;
 		for(int i=0;i<qtdePipelines;i++){
@@ -134,17 +136,102 @@ int main(){
 			cout << "\n";
 		}
 		numeroDoCiclo++;
+		//Fim: Impressao
 	}
 
-	//Fim: Verificação de Dependências
+	
 
 
 
-	//Impressão
+	
 
 	return 0;
 }
 
+
+
+
+int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio, int pipe){
+	//percorre o vetor de intruções
+	for(int i=0; i<instrucoesRestantes.size(); i++ ){
+		
+		Instrucao *aux = &instrucoesRestantes[i]; //cria ponteiro para instrução do vetor na posição i
+
+		//naoExecutando é uma flag pra que a mesma instrução não seja executada mais de uma vez por ciclo
+		if(aux->naoExecutando && aux->estagio == estagio){
+
+			if(verificaSeExisteDependencia(instrucoesRestantes,aux)){ //verificaSeExisteDependencia(instrucoesRestantes,aux
+				aux->naoExecutando = false;
+				aux->estagio++;
+				return i+1;
+			}
+			else{
+				return 0;
+			}
+			
+		}
+	}
+}
+
+bool verificaSeExisteDependencia(vector<Instrucao> instrucoes, Instrucao* atual){
+
+
+	int numeroInstrucaoQueDepende_Op1 = atual->depende[0];
+	int numeroInstrucaoQueDepende_Op2 = atual->depende[1];
+
+	
+	//Se a instrução atual que está sendo verificada não depende de outras instruções, retorna true
+	if(numeroInstrucaoQueDepende_Op1 == 0 && numeroInstrucaoQueDepende_Op2 == 0){
+	
+		return true;
+	}
+	else{
+		//Se a instrução atual depende de outra(s) instrução(ões) mas ela(s) já foi(ram) executada(s) e seu(s) estagio(s)
+		//for(em) = ou maior que o 4º(MEM),retorna true
+		Instrucao aux1 = instrucoes[numeroInstrucaoQueDepende_Op1];
+		Instrucao aux2 = instrucoes[numeroInstrucaoQueDepende_Op2];
+
+		//Se a instrução recebe o operando2 de outra instrução, retorne false
+		if(numeroInstrucaoQueDepende_Op1 == 0 && numeroInstrucaoQueDepende_Op2 != 0){
+			if(aux2.estagio <= 4){
+				//atual->naoExecutando = false;
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		//Se a instrução recebe o operando1 de outra instrução, retorne false
+		else if(numeroInstrucaoQueDepende_Op1 != 0 && numeroInstrucaoQueDepende_Op2 == 0){
+			if(aux1.estagio <= 3){
+				//atual->naoExecutando = false;
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+		//Se a instrução recebe o operando1 e operando2 de outras instruções, retorne false
+		else if(numeroInstrucaoQueDepende_Op1 != 0 && numeroInstrucaoQueDepende_Op2 != 0){
+			if(aux1.estagio <= 4 || aux2.estagio <= 4){
+				//atual->naoExecutando = false;
+				return false;
+			}
+			else{
+				return true;
+			}
+		}
+	}
+/*
+	if(aux1.estagio <5 && aux2.estagio <5){
+		aux->naoExecutando = false;
+		return false;
+	}
+	else{
+		//Se a instrução depende de outra que o estagio não está WB, retorne false
+		return true;		
+	}*/
+}
 
 //Se existir apena uma instrução com estágio menor que 5 retornar verdadeiro, caso contrário retornar falso
 bool existeInstrucoesASeremExecutadas(vector<Instrucao> &instrucoes){
@@ -169,23 +256,4 @@ void liberarInstrucoesExecutadas(vector<Instrucao> &instrucoes){
 		aux->naoExecutando = true;
 	}	
 
-}
-
-int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio, int pipe){
-	for(int i=0; i<instrucoesRestantes.size(); i++ ){
-		Instrucao *aux = &instrucoesRestantes[i];
-		if(aux->naoExecutando && aux->estagio == estagio){
-			if(true){ // aqui no futuro voce vai substituir pelo algoritmo que vai calcular dependencias
-				aux->naoExecutando = false;
-				aux->estagio++;
-//				cout << "Estagio: " << estagio << " Pipeline:" << pipe;
-//				cout << " Instrucao: " << i<<endl;
-//				cout << "2.1 aux0.estagio: " << aux->estagio << " aux0.naoExecutando" << aux->naoExecutando << endl;
-				return i+1;
-			}
-			
-		}
-	}
-
-	return 0;
 }
