@@ -41,7 +41,7 @@ bool existeInstrucoesASeremExecutadas(vector<Instrucao> &instrucoes);
 void liberarInstrucoesExecutadas(vector<Instrucao> &instrucoes);
 bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual);
 int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int inst, int pipe);
-
+void imprimeInstrucoesNaoConcluidas(vector<Instrucao> &instrucao, int tamanho);
 
 
 #endif
