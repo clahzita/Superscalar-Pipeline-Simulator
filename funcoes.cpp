@@ -1,11 +1,3 @@
-//
-//  funcoes.cpp
-//  SuperscalarPipelineSimulatorFunctions
-//
-//  Created by Clarissa Alves Soares on 02/06/2016.
-//  Copyright (c) 2016 Clarissa Alves Soares. All rights reserved.
-//
-
 #include <fstream>
 #include <string.h>
 #include <locale.h>
@@ -17,11 +9,10 @@
 //Função verifica se a instrução depende de outra e se a instrução a qual depende já está no estágio MEM
 // @param - vetor de todas instruções 
 // @param - instrução atual que vai verificar se depende de outra
-// return - true se não depende, false se depende
+// Muda a flag Independencia da instrução atual para true se ela for independente, false de for dependente
 
-bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual){
+void verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual){
 
-//	cout << "calculando dependencia" << endl;
 	int numeroInstrucaoQueDepende_Op1 = atual->depende[0];
 	int numeroInstrucaoQueDepende_Op2 = atual->depende[1];
 
@@ -31,7 +22,6 @@ bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual
 	//Se a instrução atual que está sendo verificada não depende de outras instruções, retorna true
 	if(numeroInstrucaoQueDepende_Op1 == 0 && numeroInstrucaoQueDepende_Op2 == 0){
 		atual->Independencia = true;
-		return true;
 	}
 	//Se a instrução atual depende de outra(s) instrução(ões) mas ela(s) já foi(ram) executada(s) e seu(s) estagio(s)
 	//for(em) = ou maior que o 4º(MEM),retorna true
@@ -40,33 +30,28 @@ bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual
 	else if(numeroInstrucaoQueDepende_Op1 == 0 && numeroInstrucaoQueDepende_Op2 != 0){
 		if(aux2.estagio < 3){
 			atual->Independencia = false;
-			return false;
 		}
 		else{
 			atual->Independencia = true;
-			return true;
 		}
 	}
 		//Se a instrução recebe o operando1 de outra instrução, retorne false
 	else if(numeroInstrucaoQueDepende_Op1 != 0 && numeroInstrucaoQueDepende_Op2 == 0){
 		if(aux1.estagio < 3){
 			atual->Independencia = false;
-			return false;
 		}
 		else{
 			atual->Independencia = true;
-			return true;
 		}
 	}
 		//Se a instrução recebe o operando1 e operando2 de outras instruções, retorne false
 	else if(numeroInstrucaoQueDepende_Op1 != 0 && numeroInstrucaoQueDepende_Op2 != 0){
 		if(aux1.estagio < 3 || aux2.estagio < 3){
 			atual->Independencia = false;
-			return false;
+		//	return false;
 		}
 		else{
 			atual->Independencia = true;
-			return true;		
 		}
 	}
 	
@@ -77,24 +62,38 @@ bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual
 // @param - pipeline que está sendo verificada
 // return - retorna o inteiro a posição da matriz, colocando a instrução corretamente na matriz em cada ciclo
 //
-int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio, int pipe){
+int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio){
 
 	for(int i=0; i<instrucoesRestantes.size(); i++ ){
 		
 		Instrucao *aux = &instrucoesRestantes[i]; //cria ponteiro para instrução do vetor na posição i
 
-		bool verificador = verificaSeExisteDependencia(instrucoesRestantes,aux);
+		verificaSeExisteDependencia(instrucoesRestantes,aux);
 
 		//naoExecutando é uma flag pra que a mesma instrução não seja executada mais de uma vez por ciclo
 		//aux->estagio == estagio - verifica em que estagio está instrução para adioná-la na linha/estagio da matriz corretamente
+		//Independencia - flag que só deixa executar a instrução que for independente
 		if(aux->naoExecutando && aux->estagio == estagio && aux->Independencia){
 			
-			aux->naoExecutando = false;
-			aux->estagio++;
-			return i+1;
+			Instrucao *aux2 = &instrucoesRestantes[i-1];
+			
+			if(aux->ordem == 1){
+				aux->naoExecutando = false;
+				aux->estagio++;
+				return i+1;
+			}
+			else {
+				if(aux2->estagio > 0){
+				aux->naoExecutando = false;
+				aux->estagio++;
+				return i+1;
+				}
+				else{
+					return 0;
+				}				
+			}
+
 		}
-		//cout << "instrucao " << i+1 << " nao rodara" << endl;
-		
 	}
 
 	return 0;
@@ -105,11 +104,10 @@ int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio, int pipe
 // @param - vetor de todas instruções 
 // return - true se houver instrução a ser executada, false se todas já foram executadas
 //
-//Se existir apena uma instrução com estágio menor que 5 retornar verdadeiro, caso contrário retornar falso
+//Se existir apenas uma instrução com estágio menor que 5 retornar verdadeiro, caso contrário retornar falso
 //
 bool existeInstrucoesASeremExecutadas(vector<Instrucao> &instrucoes){
 	
-
 	for(int i=0; i<instrucoes.size(); i++ ){
 		Instrucao* aux = &instrucoes[i];
 
@@ -149,11 +147,33 @@ void imprimeInstrucoesNaoConcluidas(vector<Instrucao> &instrucao, int tamanho){
 		Instrucao* aux = &instrucao[i];
 
 		if(aux->estagio < 5){
-			cout << aux->ordem << " " << aux->tipo << " " << aux->receptor << " " << aux->op1 << " " << aux->op2 << " ";
-			cout << aux->depende[0] << "," << aux->depende[1] << endl;	
+			if(aux->depende[0] == 0 && aux->depende[1] != 0){
+				cout << aux->ordem << "\t" << aux->tipo << "\t" << aux->receptor << "\t";
+				cout << aux->op1 << "   " << "\t";
+				cout << aux->op2 << "<-" << aux->depende[1] << endl;
+			}
+			
+			if(aux->depende[1] == 0 && aux->depende[0] != 0){
+				cout << aux->ordem << "\t" << aux->tipo << "\t" << aux->receptor << "\t";
+				cout << aux->op1 << "<-" << aux->depende[0]<< "\t";
+				cout << aux->op2 << "   " << endl;
+			}
+
+			if(aux->depende[1] != 0 && aux->depende[0] != 0){
+				cout << aux->ordem << "\t" << aux->tipo << "\t" << aux->receptor << "\t";
+				cout << aux->op1 << "<-" << aux->depende[0]<< "\t";
+				cout << aux->op2 << "<-" << aux->depende[1] << endl;
+			}
+
+			if(aux->depende[1] == 0 && aux->depende[0] == 0){
+				cout << aux->ordem << "\t" << aux->tipo << "\t" << aux->receptor << "\t";
+				cout << aux->op1 << "\t" << aux->op2 << endl;
+			}
+
 		}
 		else{
 			cout << endl;
 		}
 	}
 }
+

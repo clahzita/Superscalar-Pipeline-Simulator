@@ -1,11 +1,3 @@
-//
-//  funcoes.h
-//  Instructions
-//
-//  Created by Clarissa Alves Soares on 02/06/2016.
-//  Copyright (c) 2016 Clarissa Alves Soares. All rights reserved.
-//
-
 #ifndef _SIMULADOR_PROCESSADOR_SUPERESCALAR_
 #define _SIMULADOR_PROCESSADOR_SUPERESCALAR_
 
@@ -28,8 +20,8 @@ typedef struct tpInstrucao{
 	int ordem;
 	char tipo[5];
 	char receptor[4];
-	char op1[4];
-	char op2[5];
+	char op1[10];
+	char op2[10];
 	int depende[2];
 	bool naoExecutando = true;
 	bool Independencia;
@@ -39,8 +31,8 @@ typedef struct tpInstrucao{
 
 bool existeInstrucoesASeremExecutadas(vector<Instrucao> &instrucoes);
 void liberarInstrucoesExecutadas(vector<Instrucao> &instrucoes);
-bool verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual);
-int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int inst, int pipe);
+void verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual);
+int pegarInstrucao(vector<Instrucao> &instrucoesRestantes, int estagio);
 void imprimeInstrucoesNaoConcluidas(vector<Instrucao> &instrucao, int tamanho);
 
 

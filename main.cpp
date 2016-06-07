@@ -1,12 +1,3 @@
-//
-//  main.cpp
-//  SuperscalarPipelineSimulator
-//
-//  Created by Clarissa Alves Soares on 02/06/2016.
-//  Copyright (c) 2016 Clarissa Alves Soares. All rights reserved.
-//
-
-
 #include <fstream>
 #include <string.h>
 #include <locale.h>
@@ -47,7 +38,7 @@ int main(){
 
 	cout << "Digite o nome do arquivo com a lista de intruções: ";
 	cin >> nomeArquivoStr;
-	cout << endl;
+
 	char* nomeArquivo = new char[nomeArquivoStr.length()+1];
 	strcpy(nomeArquivo,nomeArquivoStr.c_str());
 
@@ -55,6 +46,21 @@ int main(){
 
 	if( extensao != ".txt"){
 		cout << "Extensão do arquivo inválida. Apenas arquivos .txt" << endl;
+	}
+
+	char escolha;
+	cout << "Modo automático: S - Sim | N - Não" << endl;
+	cin >> escolha;
+	bool automatico;
+
+	if(escolha == 'S' || escolha == 's'){
+		automatico = true;
+	}
+	else{
+		automatico = false;
+		if(escolha != 'N' || escolha != 'n'){
+			cout << "Digitou errado, vai no manual mesmo!" << endl;
+		}
 	}
 
 
@@ -70,9 +76,7 @@ int main(){
 		while(arquivoInstrucoes >> inst->ordem >> inst->tipo >> inst->receptor >> inst->op1 >> 
 			  inst->op2 >> inst->depende[0] >> inst->depende[1]){
 
-
 			instrucao.push_back((*inst));
-
 			inst.release();
 			inst.reset(new Instrucao);
 			
@@ -88,21 +92,28 @@ int main(){
 	}
 	//Fim: Leitura do arquivo txt
 
-	getchar();
+	cout << endl;
+	cout << "Pressione qualquer tecla para continuar" << endl;
 	getchar();
 	system("clear");
 
 	//Início: Verificação de Dependências
 
 	int numeroDoCiclo = 1;
+	int qtdebolhas = 0;
 
 	while( existeInstrucoesASeremExecutadas(instrucao) ){
-
+		int bolhas = 0;
 		int estagio[5][qtdePipelines];
 
 		for(int i=0; i<5;i++){
 			for(int j=0;j<qtdePipelines;j++){
-				estagio[i][j] = pegarInstrucao(instrucao,i,j);
+
+				estagio[i][j] = pegarInstrucao(instrucao,i);
+				
+				if(estagio[i][j] == 0){
+					bolhas++;
+				}
 	
 			}
 		}
@@ -110,9 +121,35 @@ int main(){
 		liberarInstrucoesExecutadas(instrucao);
 	//Fim: Verificação de Dependências
 
-	imprimeInstrucoesNaoConcluidas(instrucao,numeroinstrucoes);
+
+	//Contagem de stall na pipeline
+
+		if(numeroDoCiclo >= 5){
+			if(instrucao[numeroinstrucoes-1].estagio < 2){
+				if(instrucao[numeroinstrucoes-1].estagio == 1){
+					
+					for(int i = 0; i < qtdePipelines; i++){
+						if(estagio[1][i] == 0){
+							qtdebolhas++;
+						}
+					}
+				}
+				else{
+
+					qtdebolhas += bolhas;	
+				}
+				
+			}
+		}
+
+
+	//Contagem de stall na pipeline	
+	
 		
 	//Início: Impressão	por Ciclo
+
+		imprimeInstrucoesNaoConcluidas(instrucao,numeroinstrucoes);
+
 		for(int i=1;i<=qtdePipelines;i++){
 			cout << "---------------";
 		}
@@ -158,11 +195,25 @@ int main(){
 		cout << "\n";
 
 	//Fim: Impressao por Ciclo
-
-		//getchar();
-		std::this_thread::sleep_for (std::chrono::seconds(1));
+		if(automatico){
+			std::this_thread::sleep_for (std::chrono::seconds(1));
+		}
+		else{
+			getchar();
+		}
+		
 		system("clear");
 	}
+	for(int i=1;i<=qtdePipelines;i++){
+			cout << "---------------";
+		}
+		cout << "\n";
+	cout << "Foram necessários " << numeroDoCiclo-1 << " ciclos para executar " << numeroinstrucoes << " instruções." << endl;
+	cout << "Número de bolhas: " << qtdebolhas << "/" << ((numeroDoCiclo-9)*5*qtdePipelines) << endl;
+	for(int i=1;i<=qtdePipelines;i++){
+			cout << "---------------";
+		}
+		cout << "\n";
 
 	return 0;
 }
