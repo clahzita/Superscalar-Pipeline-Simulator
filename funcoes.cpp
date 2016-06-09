@@ -48,7 +48,6 @@ void verificaSeExisteDependencia(vector<Instrucao> &instrucoes, Instrucao* atual
 	else if(numeroInstrucaoQueDepende_Op1 != 0 && numeroInstrucaoQueDepende_Op2 != 0){
 		if(aux1.estagio < 3 || aux2.estagio < 3){
 			atual->Independencia = false;
-		//	return false;
 		}
 		else{
 			atual->Independencia = true;

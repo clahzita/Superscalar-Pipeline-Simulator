@@ -126,19 +126,8 @@ int main(){
 
 		if(numeroDoCiclo >= 5){
 			if(instrucao[numeroinstrucoes-1].estagio < 2){
-				if(instrucao[numeroinstrucoes-1].estagio == 1){
-					
-					for(int i = 0; i < qtdePipelines; i++){
-						if(estagio[1][i] == 0){
-							qtdebolhas++;
-						}
-					}
-				}
-				else{
-
-					qtdebolhas += bolhas;	
-				}
-				
+	
+					qtdebolhas += bolhas;				
 			}
 		}
 
@@ -209,7 +198,7 @@ int main(){
 		}
 		cout << "\n";
 	cout << "Foram necessários " << numeroDoCiclo-1 << " ciclos para executar " << numeroinstrucoes << " instruções." << endl;
-	cout << "Número de bolhas: " << qtdebolhas << "/" << ((numeroDoCiclo-9)*5*qtdePipelines) << endl;
+	cout << "Grau de aproveitamento: " << qtdebolhas << "/" << ((numeroDoCiclo-8)*5*qtdePipelines) << endl;
 	for(int i=1;i<=qtdePipelines;i++){
 			cout << "---------------";
 		}
